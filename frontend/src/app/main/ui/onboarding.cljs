@@ -238,9 +238,7 @@
 
 (defmulti render-release-notes :version)
 
-(mf/defc release-notes-modal
-  {::mf/register modal/components
-   ::mf/register-as :release-notes}
+(mf/defc release-notes
   [{:keys [version] :as props}]
   (let [slide (mf/use-state :start)
         klass (mf/use-state "fadeInDown")
@@ -285,12 +283,15 @@
       :slide slide
       :version version})))
 
-;; This case should never happen; but if happen just hide inmediatelly
-;; the modal.
-(defmethod render-release-notes :default
+(mf/defc release-notes-modal
+  {::mf/wrap-props false
+   ::mf/register modal/components
+   ::mf/register-as :release-notes}
   [props]
-  (tm/schedule 0 #(st/emit! (modal/hide)))
-  (mf/html [:span ""]))
+  (let [versions (methods render-release-notes)
+        version  (obj/get props "version")]
+    (when (contains? versions version)
+      [:> release-notes props])))
 
 (defmethod render-release-notes "0.0"
   [params]
